@@ -135,3 +135,26 @@ function cjtest --description "test cangjie"
     python3 cangjie_test_framework/main.py --temp_dir=$test_tmp_dir --log_dir=$logcjtestdir --test_cfg=$test_cfg $test_list_opt --fail-verbose -pFAIL -j8 --debug $test_cases 
     popd
 end
+
+function cjclonerepo -a user repo --description "clone cangjie repo from gitcode"
+    set -l upstream "https://gitcode.com/Cangjie/$repo.git"
+    set -l origin "https://gitcode.com/$user/$repo.git"
+
+    if not set -q CJ_WORKSPACE
+        # message that cangjie repos are placed under CJ_WORKSPACE variable
+        echo "Please setup `\$CJ_WORKSPACE` via `cjworkspace` call" >&2
+        return 1
+    end
+
+    echo "Setting upstream as \"$upstream\""
+    git clone $upstream "$CJ_WORKSPACE/$repo"
+    or return 1
+    pushd "$CJ_WORKSPACE/$repo"
+    git remote rename origin upstream
+    or return 1
+
+    echo "Setting origin as \"$origin\""
+    git remote add origin $origin
+    or return 1
+    popd
+end
