@@ -1,13 +1,12 @@
+#!/usr/bin/env fish
 
 function cjworkspace --description "setup cangjie workspace"
     set -gx CJ_WORKSPACE "$(eval echo ~$USER)/projects/cangjie"
-    if set -q $argv[1]
+    if count $argv > /dev/null
         set CJ_WORKSPACE $argv[1]
     end
     set -gx CJ_OUT "$CJ_WORKSPACE/out"
 end
-
-cjworkspace
 
 function cjenv --description "setup built cangjie"
     set -gx CANGJIE_HOME $CJ_OUT
@@ -147,9 +146,9 @@ function cjclonerepo -a user repo --description "clone cangjie repo from gitcode
     end
 
     echo "Setting upstream as \"$upstream\""
-    git clone $upstream "$CJ_WORKSPACE/$repo"
+    git clone $upstream "$CJ_WORKSPACE/bdev/$repo"
     or return 1
-    pushd "$CJ_WORKSPACE/$repo"
+    pushd "$CJ_WORKSPACE/bdev/$repo"
     git remote rename origin upstream
     or return 1
 
