@@ -1,0 +1,16 @@
+#!/usr/bin/env fish
+
+# cjstdxbuild
+# "build cangjie stdx library"
+
+set -l dir "$CJ_WORKSPACE/cangjie_stdx"
+pushd $dir
+python3 build.py clean
+    or return 1
+python3 build.py build -t debug
+    or return 1
+python3 build.py install --prefix $CJ_OUT
+    or return 1
+popd
+
+set -gx CANGJIE_STDX_PATH "$CJ_OUT/linux_x86_64_cjnative/static/stdx"

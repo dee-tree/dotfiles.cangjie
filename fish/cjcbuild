@@ -1,0 +1,13 @@
+#!/usr/bin/env fish
+
+# cjcbuild
+# build cangjie compiler
+
+set -l cjc_dir "$CJ_WORKSPACE/cangjie_compiler"
+pushd $cjc_dir
+python3 build.py build -t debug --enable-assert --no-tests --jobs=16
+    or return 1
+
+python3 build.py install --prefix $CJ_OUT
+    or return 1
+popd

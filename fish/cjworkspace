@@ -1,0 +1,10 @@
+#!/usr/bin/env fish
+
+# cjworkspace
+# "setup cangjie workspace"
+set -gx CJ_WORKSPACE "$(pwd)"
+if count $argv > /dev/null
+    set CJ_WORKSPACE $argv[1]
+end
+set -gx CJ_OUT "$CJ_WORKSPACE/out"
+

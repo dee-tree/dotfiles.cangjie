@@ -1,0 +1,13 @@
+#!/usr/bin/env fish
+
+# cjstdbuild
+# "build cangjie stdlib"
+
+set -l runtime_dir "$CJ_WORKSPACE/cangjie_runtime/runtime/output"
+set -l dir "$CJ_WORKSPACE/cangjie_runtime/stdlib"
+pushd $dir
+python3 build.py build -t debug --target-lib $runtime_dir
+    or return 1
+python3 build.py install --prefix $CJ_OUT
+     or return
+popd

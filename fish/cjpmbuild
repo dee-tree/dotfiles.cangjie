@@ -1,0 +1,13 @@
+#!/usr/bin/env fish
+
+# cjpmbuild
+# "build cangjie cjpm"
+
+set -l dir "$CJ_WORKSPACE/cangjie_tools/cjpm"
+pushd $dir
+python3 build/build.py build -t debug
+    or return 1
+python3 build/build.py install --prefix $CJ_OUT
+    or return 1
+popd
+# ln -s $CJ_OUT/cjpm $CJ_OUT/bin/cjpm
