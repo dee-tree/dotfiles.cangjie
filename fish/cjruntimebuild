@@ -1,0 +1,14 @@
+#!/usr/bin/env fish
+
+# cjruntimebuild
+# build cangjie runtime
+
+set -l dir "$CJ_WORKSPACE/cangjie_runtime/runtime"
+pushd $dir
+python3 build.py build -t debug --version 1.0.0
+    or return 1
+python3 build.py install
+    or return 1
+python3 build.py install --prefix $CJ_OUT
+    or return 1
+popd

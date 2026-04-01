@@ -1,0 +1,22 @@
+#!/usr/bin/env fish
+
+# cjenv
+# "setup cangjie environment"
+
+set -gx CANGJIE_HOME $CJ_OUT
+
+if count $argv > 0
+    set CANGJIE_HOME $argv[1]
+end
+
+set -l hw_arch $(arch)
+if [ $hw_arch = "" ]
+    set hw_arch "x86_64"
+end
+
+echo "Activating cangjie at $CANGJIE_HOME"
+fish_add_path --prepend -g {$CANGJIE_HOME}/bin
+fish_add_path --prepend -g {$CANGJIE_HOME}/tools/bin
+fish_add_path --append -g {$HOME}/.cjpm/bin
+set -gxp LD_LIBRARY_PATH $CANGJIE_HOME/runtime/lib/linux_{$hw_arch}_cjnative
+set -gxp LD_LIBRARY_PATH $CANGJIE_HOME/tools/lib

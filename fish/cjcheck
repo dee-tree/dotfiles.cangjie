@@ -1,0 +1,47 @@
+#!/usr/bin/env fish
+
+# cjcheck
+# check if cangjie environment is set
+
+echo "[1] cangjie development:"
+
+if set -q CJ_WORKSPACE
+    echo "✅ CJ_WORKSPACE: {$CJ_WORKSPACE}"
+else
+    echo "❌ CJ_WORKSPACE"
+end
+
+if set -q CJ_OUT
+    echo "✅ CJ_OUT: {$CJ_OUT}"
+else
+    echo "❌ CJ_OUT"
+end
+
+if set -q CJ_OUT
+    echo "✅ CJ_OUT: {$CJ_OUT}"
+else
+    echo "❌ CJ_OUT"
+end
+
+echo "[2] cangjie usage:"
+
+if set -q CANGJIE_HOME
+    echo "✅ CANGJIE_HOME: {$CANGJIE_HOME}"
+else
+    echo "❌ CANGJIE_HOME"
+end
+
+if type -q cjc
+    echo "✅ cjc: $(which cjc)"
+    echo $(cjc --version)
+else
+    echo "❌ cjc"
+end
+
+if type -q cjpm
+    echo "✅ cjpm: $(which cjpm)"
+    echo $(cjpm --version)
+else
+    echo "❌ cjpm"
+end
+

@@ -1,43 +1,43 @@
 #!/usr/bin/env fish
 
-function cjworkspace --description "setup cangjie workspace"
-    set -gx CJ_WORKSPACE "$(eval echo ~$USER)/projects/cangjie"
-    if count $argv > /dev/null
-        set CJ_WORKSPACE $argv[1]
-    end
-    set -gx CJ_OUT "$CJ_WORKSPACE/out"
-end
+# function cjworkspace --description "setup cangjie workspace"
+    # set -gx CJ_WORKSPACE "$(eval echo ~$USER)/projects/cangjie"
+    # if count $argv > /dev/null
+        # set CJ_WORKSPACE $argv[1]
+    # end
+    # set -gx CJ_OUT "$CJ_WORKSPACE/out"
+# end
 
-function cjenv --description "setup built cangjie"
-    set -gx CANGJIE_HOME $CJ_OUT
+# function cjenv --description "setup built cangjie"
+#     set -gx CANGJIE_HOME $CJ_OUT
+#
+#     if count $argv > 0
+#         set CANGJIE_HOME $argv[1]
+#     end
+#
+#     set -l hw_arch $(arch)
+#     if [ $hw_arch = "" ]
+#         set hw_arch "x86_64"
+#     end
+#
+#     echo "Activating cangjie at $CANGJIE_HOME"
+#     fish_add_path --prepend -g {$CANGJIE_HOME}/bin
+#     fish_add_path --prepend -g {$CANGJIE_HOME}/tools/bin
+#     fish_add_path --append -g {$HOME}/.cjpm/bin
+#     set -gxp LD_LIBRARY_PATH $CANGJIE_HOME/runtime/lib/linux_{$hw_arch}_cjnative
+#     set -gxp LD_LIBRARY_PATH $CANGJIE_HOME/tools/lib
+# end
 
-    if count $argv > 0
-        set CANGJIE_HOME $argv[1]
-    end
-
-    set -l hw_arch $(arch)
-    if [ $hw_arch = "" ]
-        set hw_arch "x86_64"
-    end
-
-    echo "Activating cangjie at $CANGJIE_HOME"
-    fish_add_path --prepend -g {$CANGJIE_HOME}/bin
-    fish_add_path --prepend -g {$CANGJIE_HOME}/tools/bin
-    fish_add_path --append -g {$HOME}/.cjpm/bin
-    set -gxp LD_LIBRARY_PATH $CANGJIE_HOME/runtime/lib/linux_{$hw_arch}_cjnative
-    set -gxp LD_LIBRARY_PATH $CANGJIE_HOME/tools/lib
-end
-
-function cjcbuild --description "build cjc"
-    set -l cjc_dir "$CJ_WORKSPACE/cangjie_compiler"
-    pushd $cjc_dir
-    python3 build.py build -t debug --enable-assert --no-tests --jobs=16
-        or return 1
-
-    python3 build.py install --prefix $CJ_OUT
-        or return 1
-    popd
-end
+# function cjcbuild --description "build cjc"
+#     set -l cjc_dir "$CJ_WORKSPACE/cangjie_compiler"
+#     pushd $cjc_dir
+#     python3 build.py build -t debug --enable-assert --no-tests --jobs=16
+#         or return 1
+#
+#     python3 build.py install --prefix $CJ_OUT
+#         or return 1
+#     popd
+# end
 
 function cjruntimebuild --description "build cj runtime"
     set -l dir "$CJ_WORKSPACE/cangjie_runtime/runtime"
