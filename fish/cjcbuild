@@ -11,3 +11,17 @@ python3 build.py build -t debug --enable-assert --no-tests --jobs=16
 python3 build.py install --prefix $CJ_OUT
     or return 1
 popd
+
+# wrap cjc with wrapper with custom gnu utils
+mv $CJ_OUT/bin/cjc $CJ_OUT/bin/cjc.bin
+
+# LD_LIBRARY_PATH=$CANGJIE_HOME/runtime/lib/linux_$(uname -m)_cjnative:$CANGJIE_HOME/tools/lib:$LD_LIBRARY_PATH \
+# LIBRARY_PATH=$CANGJIE_HOME/runtime/lib/linux_$(uname -m)_cjnative:$CANGJIE_HOME/tools/lib:$LD_LIBRARY_PATH \
+# LD_PRELOAD=$CANGJIE_HOME/runtime/lib/linux_$(uname -m)_cjnative/libpcre2-8.so.0.14.0 \
+
+echo >$CJ_OUT/bin/cjc "\
+#!/usr/bin/env fish
+$CJ_OUT/bin/cjc.bin --link-option \"-I\$GNU_LD\" \$argv"
+
+chmod +x $CJ_OUT/bin/cjc
+

@@ -10,4 +10,4 @@ python3 build/build.py build -t debug
 python3 build/build.py install --prefix $CJ_OUT
     or return 1
 popd
-# ln -s $CJ_OUT/cjpm $CJ_OUT/bin/cjpm
+ln -s $CJ_OUT/cjpm $CJ_OUT/tools/bin/cjpm

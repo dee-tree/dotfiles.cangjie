@@ -1,0 +1,41 @@
+#!/usr/bin/env fish
+
+if test argv[1] = "cjc" or test argv[1] = "all"
+    echo "Cleaning cjc..."
+    pushd $CJ_WORKSPACE/cangjie_compiler
+    python3 build.py clean
+        or return 1
+    popd
+end
+
+if test argv[1] = "runtime" or test argv[1] = "all"
+    echo "Cleaning runtime..."
+    pushd $CJ_WORKSPACE/cangjie_runtime/runtime
+    python3 build.py clean
+        or return 1
+    popd
+end
+
+if test argv[1] = "std" or test argv[1] = "all"
+    echo "Cleaning stdlib..."
+    pushd $CJ_WORKSPACE/cangjie_runtime/stdlib
+    python3 build.py clean
+        or return 1
+    popd
+end
+
+if test argv[1] = "stdx" or test argv[1] = "all"
+    echo "Cleaning stdx..."
+    pushd $CJ_WORKSPACE/cangjie_stdx
+    python3 build.py clean
+        or return 1
+    popd
+end
+
+if test argv[1] = "cjpm" or test argv[1] = "all"
+    echo "Cleaning cjpm..."
+    pushd $CJ_WORKSPACE/cangjie_tools/cjpm/build
+    python3 build.py clean
+        or return 1
+    popd
+end
