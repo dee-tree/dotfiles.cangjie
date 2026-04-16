@@ -5,7 +5,7 @@
 
 set -l cjc_dir "$CJ_WORKSPACE/cangjie_compiler"
 pushd $cjc_dir
-python3 build.py build -t debug --enable-assert --no-tests --jobs=16
+python3 build.py build -t debug --enable-assert --no-tests --jobs=16 --version $CANGJIE_SDK_VERSION
     or return 1
 
 python3 build.py install --prefix $CJ_OUT
