@@ -5,7 +5,7 @@
 
 set -l dir "$CJ_WORKSPACE/cangjie_tools/cjpm"
 pushd $dir
-python3 build/build.py build -t debug
+python3 build/build.py build -t $CANGJIE_FLAVOR
     or return 1
 python3 build/build.py install --prefix $CJ_OUT
     or return 1

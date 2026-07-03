@@ -54,6 +54,7 @@
                 swig
 
                 jdk17
+                async-profiler
 
                 # for $(arch) in envsetup.sh
                 arch-cmd

@@ -5,7 +5,7 @@
 
 set -gx CANGJIE_HOME $CJ_OUT
 
-if count $argv > 0
+if test -n "$argv"
     set CANGJIE_HOME $argv[1]
 end
 

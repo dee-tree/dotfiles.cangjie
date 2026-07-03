@@ -8,7 +8,7 @@ set -l objc "objc"
 set -l interop_path "$CJ_WORKSPACE/cangjie_multiplatform_interop"
 if test $argv[1] = $java
     pushd "$interop_path/java/build"
-    python3 build.py build -t debug --target-lib linux_x86_64_cjnative
+    python3 build.py build -t $CANGJIE_FLAVOR --target-lib linux_x86_64_cjnative
         or return 1
     python3 build.py install --target linux_x86_64 --prefix $CANGJIE_HOME
         or return 1

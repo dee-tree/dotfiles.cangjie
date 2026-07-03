@@ -9,7 +9,7 @@ set -l test_cfg $cj_test_dir/testsuites/LLT/configs/cjnative/cjnative_test.cfg
 set -l test_list $cj_test_dir/testsuites/LLT/cjnative_testlist
 
 set -l test_tmp_dir $cj_tf_dir/test_temp
-set -l logcjtestdir argv/log/cjtest
+set -l logcjtestdir log/cangjie/cjtest
 set -l test_cases $argv[(count argv)]
 set -l test_kind "LLT"
 
@@ -27,7 +27,7 @@ set -l test_list_opt "--test_list=$test_list"
 pushd $CJ_WORKSPACE
 echo "Running $test_kind tests..."
 
-echo "command: python3 $cj_tf_dir/main.py --temp_dir=$test_tmp_dir --log_dir=$logcjtestdir --test_cfg=$test_cfg $test_list_opt --fail-verbose -pFAIL -j8 --debug $test_cases"
-python3 cangjie_test_framework/main.py --temp_dir=$test_tmp_dir --log_dir=$logcjtestdir --test_cfg=$test_cfg $test_list_opt --fail-verbose -pFAIL -j8 --debug $test_cases 
+echo "command: python3 $cj_tf_dir/main.py --temp_dir=$test_tmp_dir --log_dir=$logcjtestdir --test_cfg=$test_cfg $test_list_opt --fail-verbose -pFAIL --keep_temp -j8 --debug $test_cases"
+python3 cangjie_test_framework/main.py --temp_dir=$test_tmp_dir --log_dir=$logcjtestdir --test_cfg=$test_cfg $test_list_opt --fail-verbose -pFAIL --keep_temp -j8 --debug $test_cases 
 popd
 

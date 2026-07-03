@@ -5,7 +5,7 @@
 
 set -l dir "$CJ_WORKSPACE/cangjie_runtime/runtime"
 pushd $dir
-python3 build.py build -t debug --version $CANGJIE_SDK_VERSION
+python3 build.py build -t $CANGJIE_FLAVOR --version $CANGJIE_SDK_VERSION
     or return 1
 python3 build.py install
     or return 1
