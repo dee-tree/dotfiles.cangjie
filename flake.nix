@@ -13,7 +13,8 @@
         pkgs = import nixpkgs { inherit system; };
         pkgs-old = import nixpkgs-old { inherit system; };
 
-        clang15 = pkgs-old.llvmPackages_15.clang;
+        # clang15 = pkgs-old.llvmPackages_15.clang;
+        clang16 = pkgs-old.llvmPackages_16.clang;
 
         arch-cmd = pkgs.writeShellScriptBin "arch" ''
             uname -m
@@ -31,7 +32,8 @@
             hardeningDisable = [ "all" ];
             buildInputs = with pkgs; [
                 git
-                pkgs-old.llvmPackages_15.clang
+                # pkgs-old.llvmPackages_15.clang
+                clang16
                 python3
                 cmake
                 ninja
@@ -55,10 +57,13 @@
 
                 # for $(arch) in envsetup.sh
                 arch-cmd
+
+                # external tooling
+                go-task
             ];
 
-            CC = "${clang15}/bin/clang";
-            CXX = "${clang15}/bin/clang++";
+            CC = "${clang16}/bin/clang";
+            CXX = "${clang16}/bin/clang++";
             
             CMAKE_CXX_COMPILER_LAUNCHER="${pkgs.ccache}/bin/ccache";
             CMAKE_C_COMPILER_LAUNCHER="${pkgs.ccache}/bin/ccache";
