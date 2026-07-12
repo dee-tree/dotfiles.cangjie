@@ -1,16 +1,17 @@
-version: '3'
+version: "3"
 
 vars:
   CANGJIE_HOME: "{{.TASKFILE_DIR}}/out"
   VALID_FLAVORS: [debug, release, relwithdebinfo]
   CANGJIE_FLAVOR: '{{.CANGJIE_FLAVOR | default "debug"}}'
-  CANGJIE_SDK_VERSION: "1.0.0"
-  CANGJIE_RUNTIME_DIR: '{{.TASKFILE_DIR}}/cangjie_runtime/runtime'
+  CANGJIE_SDK_VERSION: '{{.CANGJIE_SDK_VERSION | default "1.0.0"}}'
+  CANGJIE_RUNTIME_DIR: "{{.TASKFILE_DIR}}/cangjie_runtime/runtime"
+  PLATFORM_ARCH: "linux_x86_64"
 
 tasks:
   cjcbuild:
     desc: Build cangjie compiler
-    dir: '{{.TASKFILE_DIR}}/cangjie_compiler'
+    dir: "{{.TASKFILE_DIR}}/cangjie_compiler"
     cmds:
       - python3 build.py build -t {{.CANGJIE_FLAVOR}} --enable-assert --no-tests --jobs=16 --version {{.CANGJIE_SDK_VERSION}}
       - python3 build.py install --prefix {{.CANGJIE_HOME}}
@@ -25,9 +26,10 @@ tasks:
       vars:
         - name: CANGJIE_FLAVOR
           enum: [debug, relwithdebinfo, release]
+
   cjruntimebuild:
     desc: Build cangjie runtime
-    dir: '{{.CANGJIE_RUNTIME_DIR}}'
+    dir: "{{.CANGJIE_RUNTIME_DIR}}"
     cmds:
       - python3 build.py build -t {{.CANGJIE_FLAVOR}} --version {{.CANGJIE_SDK_VERSION}}
       - python3 build.py install
@@ -39,9 +41,9 @@ tasks:
 
   cjstdbuild:
     desc: Build cangjie standard library
-    dir: '{{.TASKFILE_DIR}}/cangjie_runtime/stdlib'
+    dir: "{{.TASKFILE_DIR}}/cangjie_runtime/stdlib"
     vars:
-      RUNTIME_OUT_DIR: '{{.CANGJIE_RUNTIME_DIR}}/output'
+      RUNTIME_OUT_DIR: "{{.CANGJIE_RUNTIME_DIR}}/output"
     cmds:
       - python3 build.py build -t {{.CANGJIE_FLAVOR}} --target-lib {{.RUNTIME_OUT_DIR}} --version {{.CANGJIE_SDK_VERSION}}
       - python3 build.py install --prefix {{.CANGJIE_HOME}}
@@ -52,7 +54,7 @@ tasks:
 
   cjstdxbuild:
     desc: Build cangjie stdx library
-    dir: '{{.TASKFILE_DIR}}/cangjie_stdx'
+    dir: "{{.TASKFILE_DIR}}/cangjie_stdx"
     cmds:
       - python3 build.py clean
       - python3 build.py build -t {{.CANGJIE_FLAVOR}}
@@ -60,12 +62,16 @@ tasks:
 
   cjinteropbuild:
     desc: Build cangjie interop library
-    dir: '{{.TASKFILE_DIR}}/cangjie_multiplatform_interop/{{if eq .LANG "java"}}java/build{{end}}'
+    dir: '{{.TASKFILE_DIR}}/cangjie_multiplatform_interop/{{if eq .LANG "java"}}java/build{{end}}{{if eq .LANG "objc"}}objc/build{{end}}'
     cmds:
       - |
         {{if eq .LANG "java"}}
-        python3 build.py build -t {{.CANGJIE_FLAVOR}} --target-lib linux_x86_64_cjnative
-        python3 build.py install --target linux_x86_64 --prefix {{.CANGJIE_HOME}}
+        python3 build.py build -t {{.CANGJIE_FLAVOR}} --target-lib {{.PLATFORM_ARCH}}_cjnative
+        python3 build.py install --target {{.PLATFORM_ARCH}} --prefix {{.CANGJIE_HOME}}
+        {{end}}
+        {{if eq .LANG "objc"}}
+        python3 build.py build -t {{.CANGJIE_FLAVOR}} --target {{.PLATFORM_ARCH}}
+        python3 build.py install --target {{.PLATFORM_ARCH}} --prefix {{.CANGJIE_HOME}}
         {{end}}
     requires:
       vars:
@@ -74,5 +80,15 @@ tasks:
         - name: LANG
           enum: [java, objc]
 
-
-
+    cjtest:
+      desc: Run cangjie tests
+      dir: "{{.TASKFILE_DIR}}"
+      vars:
+        TESTS: "{{.CLI_ARGS}}"
+        KIND: '{{if regexMatch "*HLT/*" .TESTS}}HLT{{else}}LLT{{end}}'
+        TEST_TMP_DIR: "cjtest_tmp"
+        TEST_LOG_DIR: "cjtest_log"
+      cmds:
+        - rm -rf {{.TEST_TMP_DIR}}
+        - rm -rf {{.TEST_LOG_DIR}}
+        - python3 cangjie_test_framework/main.py --temp_dir={{.TEST_TMP_DIR}} --log_dir={{.TEST_LOG_DIR}} --test_cfg=$test_cfg $test_list_opt --fail-verbose -pFAIL -j8 --debug {{.TESTS}}
