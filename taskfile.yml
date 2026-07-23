@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
 version: '3'
 
 vars:
@@ -5,22 +6,55 @@ vars:
   VALID_FLAVORS: [debug, release, relwithdebinfo]
   CANGJIE_FLAVOR: '{{.CANGJIE_FLAVOR | default "debug"}}'
   CANGJIE_SDK_VERSION: "1.0.0"
+  CANGJIE_COMPILER_DIR: '{{.TASKFILE_DIR}}/cangjie_compiler'
   CANGJIE_RUNTIME_DIR: '{{.TASKFILE_DIR}}/cangjie_runtime/runtime'
+  CANGJIE_STD_DIR: '{{.TASKFILE_DIR}}/cangjie_runtime/stdlib'
+  CANGJIE_STDX_DIR: '{{.TASKFILE_DIR}}/cangjie_stdx'
+  CANGJIE_INTEROP_DIR: '{{.TASKFILE_DIR}}/cangjie_multiplatform_interop'
+  CANGJIE_CJPM_DIR: '{{.TASKFILE_DIR}}/cangjie_tools/cjpm'
 
 tasks:
+  build:*:
+    desc: Build cangjie toolchain
+    vars:
+      TOOL: '{{index .MATCH 0}}'
+
+    cmds:
+      - task: cjcbuild
+        if: '{{or (eq .TOOL "cjc") (eq .TOOL "all")}}'
+      - task: cjruntimebuild
+        if: '{{or (eq .TOOL "runtime") (eq .TOOL "all")}}'
+      - task: cjstdbuild
+        if: '{{or (eq .TOOL "std") (eq .TOOL "all")}}'
+      - task: cjstdxbuild
+        if: '{{or (eq .TOOL "stdx") (eq .TOOL "all")}}'
+      - task: cjpmbuild 
+        if: '{{or (eq .TOOL "cjpm") (eq .TOOL "all")}}'
+      - task: cjinteropbuild:java
+        if: '{{or (eq .TOOL "java") (eq .TOOL "all") (eq .LANG "java")}}'
+      - task: cjinteropbuild:objc
+        if: '{{or (eq .TOOL "objc") (eq .TOOL "all") (eq .LANG "objc")}}'
+    requires:
+      vars:
+        - name: TOOL
+          enum: [cjc, runtime, std, stdx, cjpm, interop, java, objc]
+
   cjcbuild:
     desc: Build cangjie compiler
-    dir: '{{.TASKFILE_DIR}}/cangjie_compiler'
+    dir: '{{.CANGJIE_COMPILER_DIR}}'
     cmds:
       - python3 build.py build -t {{.CANGJIE_FLAVOR}} --enable-assert --no-tests --jobs=16 --version {{.CANGJIE_SDK_VERSION}}
       - python3 build.py install --prefix {{.CANGJIE_HOME}}
-      - mv {{.CANGJIE_HOME}}/bin/cjc {{.CANGJIE_HOME}}/bin/cjc.bin
+      - echo "Replacing cjc binary for correct nix dependencies..."
+      - cmd: mv {{.CANGJIE_HOME}}/bin/cjc {{.CANGJIE_HOME}}/bin/cjc.bin
+        silent: true
       - cmd: |
           echo >{{.CANGJIE_HOME}}/bin/cjc "\
           #!/usr/bin/env fish
           {{.CANGJIE_HOME}}/bin/cjc.bin --link-option \"-I\$GNU_LD\" \$argv"
         silent: true
-      - chmod +x {{.CANGJIE_HOME}}/bin/cjc
+      - cmd: chmod +x {{.CANGJIE_HOME}}/bin/cjc
+        silent: true
     requires:
       vars:
         - name: CANGJIE_FLAVOR
@@ -39,7 +73,7 @@ tasks:
 
   cjstdbuild:
     desc: Build cangjie standard library
-    dir: '{{.TASKFILE_DIR}}/cangjie_runtime/stdlib'
+    dir: '{{.CANGJIE_STD_DIR}}'
     vars:
       RUNTIME_OUT_DIR: '{{.CANGJIE_RUNTIME_DIR}}/output'
     cmds:
@@ -52,15 +86,32 @@ tasks:
 
   cjstdxbuild:
     desc: Build cangjie stdx library
-    dir: '{{.TASKFILE_DIR}}/cangjie_stdx'
+    dir: '{{.CANGJIE_STDX_DIR}}'
     cmds:
       - python3 build.py clean
       - python3 build.py build -t {{.CANGJIE_FLAVOR}}
       - python3 build.py install --prefix {{.CANGJIE_HOME}}
+    requires:
+      vars:
+        - name: CANGJIE_FLAVOR
+          enum: [debug, relwithdebinfo, release]
 
-  cjinteropbuild:
+  cjpmbuild:
+    desc: Build cjpm
+    dir: '{{.CANGJIE_CJPM_DIR}}'
+    cmds:
+      - python3 build/build.py build -t {{.CANGJIE_FLAVOR}}
+      - python3 build/build.py install --prefix {{.CANGJIE_HOME}}
+    requires:
+      vars:
+        - name: CANGJIE_FLAVOR
+          enum: [debug, relwithdebinfo, release]
+
+  cjinteropbuild:*:
     desc: Build cangjie interop library
-    dir: '{{.TASKFILE_DIR}}/cangjie_multiplatform_interop/{{if eq .LANG "java"}}java/build{{end}}'
+    vars:
+      LANG: '{{index .MATCH 0}}'
+    dir: '{{.CANGJIE_INTEROP_DIR}}/{{if eq .LANG "java"}}java/build{{end}}'
     cmds:
       - |
         {{if eq .LANG "java"}}
@@ -75,4 +126,54 @@ tasks:
           enum: [java, objc]
 
 
+  clean:*:
+    desc: Clean cangjie component build
+    vars:
+      TOOL: '{{index .MATCH 0}}'
+    cmds:
+      - echo "Cleaning {{.TOOL}}"
+      - task: cleancjc  
+        if: '{{or (eq .TOOL "cjc") (eq .TOOL "all")}}'
+      - task: cleanruntime 
+        if: '{{or (eq .TOOL "runtime") (eq .TOOL "all")}}'
+      - task: cleanstd 
+        if: '{{or (eq .TOOL "std") (eq .TOOL "all")}}'
+      - task: cleanstdx 
+        if: '{{or (eq .TOOL "stdx") (eq .TOOL "all")}}'
+      - task: cleancjpm 
+        if: '{{or (eq .TOOL "cjpm") (eq .TOOL "all")}}'
+    requires:
+      vars:
+        - name: TOOL
+          enum: [cjc, runtime, std, stdx, cjpm, interop, java, objc]
+
+  cleancjc:
+    desc: Clean cangjie compiler artifacts
+    dir: '{{.CANGJIE_COMPILER_DIR}}'
+    cmds:
+      - python3 build.py clean
+
+  cleanruntime:
+    desc: Clean cangjie runtime artifacts
+    dir: '{{.CANGJIE_RUNTIME_DIR}}'
+    cmds:
+      - python3 build.py clean
+    
+  cleanstd:
+    desc: Clean cangjie std artifacts
+    dir: '{{.CANGJIE_STD_DIR}}'
+    cmds:
+      - python3 build.py clean
+
+  cleanstdx:
+    desc: Clean cangjie std artifacts
+    dir: '{{.CANGJIE_STDX_DIR}}'
+    cmds:
+      - python3 build.py clean
+
+  cleancjpm:
+    desc: Clean cjpm artifacts
+    dir: '{{.CANGJIE_CJPM_DIR}}'
+    cmds:
+      - python3 build/build.py clean
 
