@@ -12,6 +12,7 @@ vars:
   CANGJIE_STDX_DIR: '{{.TASKFILE_DIR}}/cangjie_stdx'
   CANGJIE_INTEROP_DIR: '{{.TASKFILE_DIR}}/cangjie_multiplatform_interop'
   CANGJIE_CJPM_DIR: '{{.TASKFILE_DIR}}/cangjie_tools/cjpm'
+  CANGJIE_CJEXPLORE_DIR: '{{.TASKFILE_DIR}}/cjexplore'
 
 tasks:
   build:*:
@@ -20,26 +21,28 @@ tasks:
       TOOL: '{{index .MATCH 0}}'
 
     cmds:
-      - task: cjcbuild
+      - task: build.cjc
         if: '{{or (eq .TOOL "cjc") (eq .TOOL "all")}}'
-      - task: cjruntimebuild
+      - task: build.runtime
         if: '{{or (eq .TOOL "runtime") (eq .TOOL "all")}}'
-      - task: cjstdbuild
+      - task: build.std
         if: '{{or (eq .TOOL "std") (eq .TOOL "all")}}'
-      - task: cjstdxbuild
+      - task: build.stdx
         if: '{{or (eq .TOOL "stdx") (eq .TOOL "all")}}'
-      - task: cjpmbuild 
+      - task: build.cjpm
         if: '{{or (eq .TOOL "cjpm") (eq .TOOL "all")}}'
-      - task: cjinteropbuild:java
+      - task: build.interop:java
         if: '{{or (eq .TOOL "java") (eq .TOOL "all") (eq .LANG "java")}}'
-      - task: cjinteropbuild:objc
+      - task: build.interop:objc
         if: '{{or (eq .TOOL "objc") (eq .TOOL "all") (eq .LANG "objc")}}'
+      - task: build.cjexplore
+        if: '{{or (eq .TOOL "cjexplore") (eq .TOOL "all")}}'
     requires:
       vars:
         - name: TOOL
-          enum: [cjc, runtime, std, stdx, cjpm, interop, java, objc]
+          enum: [cjc, runtime, std, stdx, cjpm, cjexplore, interop, java, objc]
 
-  cjcbuild:
+  build.cjc:
     desc: Build cangjie compiler
     dir: '{{.CANGJIE_COMPILER_DIR}}'
     cmds:
@@ -59,7 +62,7 @@ tasks:
       vars:
         - name: CANGJIE_FLAVOR
           enum: [debug, relwithdebinfo, release]
-  cjruntimebuild:
+  build.runtime:
     desc: Build cangjie runtime
     dir: '{{.CANGJIE_RUNTIME_DIR}}'
     cmds:
@@ -71,7 +74,7 @@ tasks:
         - name: CANGJIE_FLAVOR
           enum: [debug, relwithdebinfo, release]
 
-  cjstdbuild:
+  build.std:
     desc: Build cangjie standard library
     dir: '{{.CANGJIE_STD_DIR}}'
     vars:
@@ -84,7 +87,7 @@ tasks:
         - name: CANGJIE_FLAVOR
           enum: [debug, relwithdebinfo, release]
 
-  cjstdxbuild:
+  build.stdx:
     desc: Build cangjie stdx library
     dir: '{{.CANGJIE_STDX_DIR}}'
     cmds:
@@ -96,7 +99,7 @@ tasks:
         - name: CANGJIE_FLAVOR
           enum: [debug, relwithdebinfo, release]
 
-  cjpmbuild:
+  build.cjpm:
     desc: Build cjpm
     dir: '{{.CANGJIE_CJPM_DIR}}'
     cmds:
@@ -107,7 +110,7 @@ tasks:
         - name: CANGJIE_FLAVOR
           enum: [debug, relwithdebinfo, release]
 
-  cjinteropbuild:*:
+  build.interop:*:
     desc: Build cangjie interop library
     vars:
       LANG: '{{index .MATCH 0}}'
@@ -125,6 +128,12 @@ tasks:
         - name: LANG
           enum: [java, objc]
 
+  build.cjexplore:
+    desc: Build cangjie cjexplore tool
+    dir: '{{.CANGJIE_CJEXPLORE_DIR}}'
+    cmds:
+      - python3 build/build.py build -t {{.CANGJIE_FLAVOR}}
+      - python3 build/build.py install --prefix {{.CANGJIE_HOME}}/tools
 
   clean:*:
     desc: Clean cangjie component build
@@ -177,3 +186,9 @@ tasks:
     cmds:
       - python3 build/build.py clean
 
+
+  init.cjexplorte:
+    desc: Clone and init cjexplore repo
+    dir: '{{ .TASKFILE_DIR }}'
+    cmds:
+      - git clone https://gitcode.com/iliayar/cjexplore.git
