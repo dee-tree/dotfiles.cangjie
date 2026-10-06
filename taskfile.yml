@@ -121,6 +121,10 @@ tasks:
         python3 build.py build -t {{.CANGJIE_FLAVOR}} --target-lib linux_x86_64_cjnative
         python3 build.py install --target linux_x86_64 --prefix {{.CANGJIE_HOME}}
         {{end}}
+        {{if eq .LANG "objc"}}
+        python3 build.py build -t {{.CANGJIE_FLAVOR}} --target linux_x_86_64
+        python3 build.py install --target linuxs_x86_64 --prefix {{.CANGJIE_HOME}}
+        {{end}}
     requires:
       vars:
         - name: CANGJIE_FLAVOR
@@ -141,54 +145,193 @@ tasks:
       TOOL: '{{index .MATCH 0}}'
     cmds:
       - echo "Cleaning {{.TOOL}}"
-      - task: cleancjc  
+      - task: clean.cjc  
         if: '{{or (eq .TOOL "cjc") (eq .TOOL "all")}}'
-      - task: cleanruntime 
+      - task: clean.runtime 
         if: '{{or (eq .TOOL "runtime") (eq .TOOL "all")}}'
-      - task: cleanstd 
+      - task: clean.std 
         if: '{{or (eq .TOOL "std") (eq .TOOL "all")}}'
-      - task: cleanstdx 
+      - task: clean.stdx 
         if: '{{or (eq .TOOL "stdx") (eq .TOOL "all")}}'
-      - task: cleancjpm 
+      - task: clean.cjpm 
         if: '{{or (eq .TOOL "cjpm") (eq .TOOL "all")}}'
+      - task: clean.interop:java
+        if: '{{or (eq .TOOL "java") (eq .TOOL "interop") (eq .TOOL "all")}}'
+      - task: clean.interop:objc
+        if: '{{or (eq .TOOL "objc") (eq .TOOL "interop") (eq .TOOL "all")}}'
     requires:
       vars:
         - name: TOOL
-          enum: [cjc, runtime, std, stdx, cjpm, interop, java, objc]
+          enum: [cjc, runtime, std, stdx, cjpm, interop, java, objc, all]
 
-  cleancjc:
+  clean.cjc:
     desc: Clean cangjie compiler artifacts
     dir: '{{.CANGJIE_COMPILER_DIR}}'
     cmds:
       - python3 build.py clean
 
-  cleanruntime:
+  clean.runtime:
     desc: Clean cangjie runtime artifacts
     dir: '{{.CANGJIE_RUNTIME_DIR}}'
     cmds:
       - python3 build.py clean
     
-  cleanstd:
+  clean.std:
     desc: Clean cangjie std artifacts
     dir: '{{.CANGJIE_STD_DIR}}'
     cmds:
       - python3 build.py clean
 
-  cleanstdx:
+  clean.stdx:
     desc: Clean cangjie std artifacts
     dir: '{{.CANGJIE_STDX_DIR}}'
     cmds:
       - python3 build.py clean
 
-  cleancjpm:
+  clean.cjpm:
     desc: Clean cjpm artifacts
     dir: '{{.CANGJIE_CJPM_DIR}}'
     cmds:
       - python3 build/build.py clean
 
+  clean.interop:*:
+    desc: Clean cangjie interop library
+    vars:
+      LANG: '{{index .MATCH 0}}'
+    dir: '{{.CANGJIE_INTEROP_DIR}}/{{if eq .LANG "java"}}java/build{{end}}'
+    cmds:
+      - |
+        {{if eq .LANG "java"}}
+        rm -rf ../dist
+        {{end}}
+        {{if eq .LANG "objc"}}
+        echo "Please clean manually & update taskfile"
+        {{end}}
+    requires:
+      vars:
+        - name: CANGJIE_FLAVOR
+          enum: [debug, relwithdebinfo, release]
+        - name: LANG
+          enum: [java, objc]
 
+  fetch:*:
+    desc: Fetch fresh remote branches in cangjie repositories
+    vars:
+      TOOL: '{{index .MATCH 0}}'
+    cmds:
+      - echo "Fetching {{.TOOL}}"
+      - task: fetch
+        if: '{{or (eq .TOOL "cjc") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_COMPILER_DIR}}'
+      - task: fetch
+        if: '{{or (eq .TOOL "runtime") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_RUNTIME_DIR}}'
+      - task: fetch
+        if: '{{or (eq .TOOL "std") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_STD_DIR}}'
+      - task: fetch
+        if: '{{or (eq .TOOL "stdx") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_STDX_DIR}}'
+      - task: fetch
+        if: '{{or (eq .TOOL "cjpm") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_CJPM_DIR}}'
+      - task: fetch
+        if: '{{or (eq .TOOL "java") (eq .TOOL "interop") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_INTEROP_DIR}}'
+      - task: fetch
+        if: '{{or (eq .TOOL "objc") (eq .TOOL "interop") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_INTEROP_DIR}}'
+    requires:
+      vars:
+        - name: TOOL
+          enum: [cjc, runtime, std, stdx, cjpm, interop, java, objc, all]
+
+  fetch:
+    desc: Fetch fresh remote
+    vars:
+      REPO_PATH: '{{default .USER_WORKING_DIR .REPO_PATH}}'
+    dir: '{{.REPO_PATH}}'
+    cmds:
+      - git fetch upstream
+      - git fetch origin
+
+  switch:*:*:
+    desc: Switch to new/existing branches in cangjie repositories
+    vars:
+      TOOL: '{{index .MATCH 0}}'
+      BRANCH: '{{index .MATCH 1}}'
+    cmds:
+      - echo "Switching {{.TOOL}} to {{.BRANCH}} branch"
+      - task: switch
+        if: '{{or (eq .TOOL "cjc") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_COMPILER_DIR}}'
+          BRANCH: '{{.BRANCH}}'
+      - task: switch
+        if: '{{or (eq .TOOL "runtime") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_RUNTIME_DIR}}'
+          BRANCH: '{{.BRANCH}}'
+      - task: switch
+        if: '{{or (eq .TOOL "std") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_STD_DIR}}'
+          BRANCH: '{{.BRANCH}}'
+      - task: switch
+        if: '{{or (eq .TOOL "stdx") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_STDX_DIR}}'
+          BRANCH: '{{.BRANCH}}'
+      - task: switch
+        if: '{{or (eq .TOOL "cjpm") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_CJPM_DIR}}'
+          BRANCH: '{{.BRANCH}}'
+      - task: switch
+        if: '{{or (eq .TOOL "java") (eq .TOOL "interop") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_INTEROP_DIR}}'
+          BRANCH: '{{.BRANCH}}'
+      - task: switch
+        if: '{{or (eq .TOOL "objc") (eq .TOOL "interop") (eq .TOOL "all")}}'
+        vars:
+          REPO_PATH: '{{.CANGJIE_INTEROP_DIR}}'
+          BRANCH: '{{.BRANCH}}'
+    requires:
+      vars:
+        - name: TOOL
+          enum: [cjc, runtime, std, stdx, cjpm, interop, java, objc, all]
+
+  switch:
+    desc: Switch git branch to specified
+    vars:
+      REPO_PATH: '{{default .USER_WORKING_DIR .REPO_PATH}}'
+      BRANCH: '{{default "main" .BRANCH}}'
+    dir: '{{.REPO_PATH}}'
+    cmds:
+      - cmd: echo "Switching into existing branch {{.BRANCH}}" && git switch {{.BRANCH}}
+        if: git rev-parse --verify {{.BRANCH}}
+
+      - cmd: echo "Creating branch {{.BRANCH}}" && git switch -c {{.BRANCH}} upstream/main
+        if: '! git rev-parse --verify {{.BRANCH}}'
+      
   init.cjexplorte:
     desc: Clone and init cjexplore repo
     dir: '{{ .TASKFILE_DIR }}'
     cmds:
       - git clone https://gitcode.com/iliayar/cjexplore.git
+
+
+  cjtest:
+    cmds:
+      - echo "testing"
+  testllt:
+    cmds:
+      - echo "llt"
