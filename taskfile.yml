@@ -114,7 +114,7 @@ tasks:
     desc: Build cangjie interop library
     vars:
       LANG: '{{index .MATCH 0}}'
-    dir: '{{.CANGJIE_INTEROP_DIR}}/{{if eq .LANG "java"}}java/build{{end}}'
+    dir: '{{.CANGJIE_INTEROP_DIR}}/{{if eq .LANG "java"}}java/build{{end}}{{if eq .LANG "objc"}}objc/build{{end}}'
     cmds:
       - |
         {{if eq .LANG "java"}}
